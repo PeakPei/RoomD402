@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
+  <Tracking>
+    <ImageTarget name="20_ScreenSaver" size="0.450000 0.253125" />
+    <ImageTarget name="Room" size="1.700000 0.956250" />
+    <ImageTarget name="Hall_Pest" size="0.190000 0.245775" />
+    <ImageTarget name="Hall_Map" size="0.230000 0.328318" />
+    <ImageTarget name="Door_Behind" size="0.750000 0.421875" />
+    <ImageTarget name="Door" size="0.520000 0.292500" />
+    <ImageTarget name="22" size="0.200000 0.242489" />
+    <ImageTarget name="21_Desk1" size="3.500000 1.968750" />
+    <ImageTarget name="21_Desk" size="2.000000 1.125000" />
+    <ImageTarget name="21" size="0.200000 0.198142" />
+    <ImageTarget name="20_Wall" size="0.200000 0.160345" />
+    <ImageTarget name="20_Desk" size="1.300000 0.731250" />
+    <ImageTarget name="20_Computer" size="0.450000 0.253125" />
+    <ImageTarget name="16_Desk" size="24.000000 13.500000" />
+    <ImageTarget name="16_Books" size="0.700000 0.393750" />
+    <ImageTarget name="19_Books" size="0.600000 0.824826" />
+    <ImageTarget name="20" size="24.000000 24.662542" />
+  </Tracking>
+</QCARConfig>
