@@ -8,66 +8,108 @@ using System;
 public class officeController : MonoBehaviour {
 
 	public Camera vuforiaCamera;
-	public GameObject officeAR1;
+	//public GameObject office3DPrefab;
+	public GameObject office3D;
 	public Text trackerText;
+
+	//private GameObject officeARClone;
 	private bool loadOnceCamera = false;
+	private List<TrackableBehaviour> currentTrackers;
+	private GameObject[] allTargetsVuforia;
 
 	// Use this for initialization
 	void Start () {
-		officeAR1.SetActive(false);
+		allTargetsVuforia = GameObject.FindGameObjectsWithTag ("Target");
+		currentTrackers = new List<TrackableBehaviour> ();
+		office3D.SetActive(false);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		//TrackableBehaviour 
-		Debug.Log ("List of trackables currently active: "+TrackableList.countTrackers());
-		if (TrackableList.countTrackers () > 0 && TrackableList.countTrackers () <= 1) {
+		//Debug.Log ("List of trackables currently active: "+TrackableList.countTrackers());
+		if (TrackableList.countTrackers () == 0){
+			trackerText.text = "Tracking: Not tracker found";
+			restartExtTrack ();
+		} else if (TrackableList.countTrackers () == 1) {
 			if (loadOnceCamera == false) {
+				loadOnceCamera = true;
+				if (currentTrackers.Count > 0) {
+					restartExtTrack ();
+				}
+				TrackerManager.Instance.GetTracker<ObjectTracker> ().Start();
 				foreach (TrackableBehaviour tb in TrackableList.getActiveTrackables()) {
 					trackerText.text = "Tracking: " + tb.TrackableName;
-					Debug.Log ("Tracking: " + tb.TrackableName);
-					officeAR1.transform.parent = tb.gameObject.transform;
-					if ("nudie_box".Equals (tb.TrackableName)) {
-						setCoordCam(new Vector3 (-10.7f, -2.2f, -0.9f),new Vector3 (0f, 0f, 0f));
-					} else if ("coffee".Equals (tb.TrackableName)) {
-						setCoordCam(new Vector3 (-3.24f, -2.2f, -8.24f),new Vector3 (0f, 180f, 0f));
-					} else if ("Room".Equals (tb.TrackableName)) {
-						setCoordCam(new Vector3 (-6.61f, 2.15f, -20.48f),new Vector3 (-90f, 0f, 7.1f));
-					} else {
-						Debug.Log ("Object tracker " + tb.TrackableName + " does not have a child");
+					Debug.Log ("Tracking: " + tb.TrackableName+" status: "+tb.CurrentStatus);
+					if (startAugmentation (tb)) {
+						office3D.transform.parent = tb.gameObject.transform;
+						Debug.Log ("Cool1");
+						tb.GetComponent<ObjectTargetBehaviour> ().ObjectTarget.StartExtendedTracking ();
+						Debug.Log ("Cool2");
 					}
-					officeAR1.SetActive (true);
 				}
-				loadOnceCamera = true;
 			}
-
 		} else if (TrackableList.countTrackers () > 1) {
 			restartExtTrack ();
-			restartCoordCam ();
-		} else {
-			trackerText.text = "Tracking: Not tracker found";
-			restartCoordCam ();
-		}
-
+		} 
 	}
 
-	private void setCoordCam(Vector3 position, Vector3 rotation){
-		//vuforiaCamera.transform.localScale = new Vector3 (2.2f, 2.2f, 2.2f);
-		vuforiaCamera.transform.position = position;
-		vuforiaCamera.transform.rotation = Quaternion.Euler(rotation);
+	private bool startAugmentation (TrackableBehaviour tb){
+		currentTrackers.Add (tb);
+		office3D.SetActive(true);
+		//officeARClone = Instantiate (office3DPrefab);
+		if (getTargetByName (tb.TrackableName) != null) {
+			setCoord (tb, getTargetByName (tb.TrackableName).transform);
+			return true;
+		} else {
+			Debug.Log ("Object tracker " + tb.TrackableName + " does not have a child");
+			restartExtTrack ();
+			return false;
+		}
 	}
 
 	private void restartExtTrack(){
-		TrackerManager.Instance.GetTracker<ObjectTracker> ().Stop ();
-		TrackerManager.Instance.GetTracker<ObjectTracker> ().ResetExtendedTracking();
-		TrackerManager.Instance.GetTracker<ObjectTracker> ().Start ();
+		//Debug.Log ("Current Trackers ("+currentTrackers.Count+") "+currentTrackers.ToArray().ToString());
+		try{
+			loadOnceCamera = false;
+			try{
+				office3D.SetActive(false);
+				//Destroy(officeARClone);
+			}catch{};
+
+			bool resetTracking = false;
+			foreach (TrackableBehaviour tb in currentTrackers) {
+				currentTrackers.Remove(tb);
+				//Debug.Log (tb.TrackableName+" is "+tb.GetComponent<ObjectTargetBehaviour> ().ObjectTarget.IsExtendedTrackingStarted());
+				tb.GetComponent<ObjectTargetBehaviour> ().ObjectTarget.StopExtendedTracking ();
+				resetTracking = true;
+			}
+			if(resetTracking){
+				TrackerManager.Instance.GetTracker<ObjectTracker> ().Stop ();
+				TrackerManager.Instance.GetTracker<ObjectTracker> ().ResetExtendedTracking();
+			}
+		}catch(Exception e){
+			//Debug.Log ("Couln't reset extTrack: "+e.Message);
+		}
 	}
+
+	private void setCoord(TrackableBehaviour tb, Transform objectRoom){
+		tb.transform.position = objectRoom.position;
+		tb.transform.rotation = objectRoom.rotation;
+		//vuforiaCamera.transform.position = position;
+		//vuforiaCamera.transform.rotation = Quaternion.Euler(rotation);
+	}
+
 	private void restartCoordCam(){
-		loadOnceCamera = false;
-		officeAR1.transform.parent = null;
-		//officeAR1.SetActive(false);
-		vuforiaCamera.transform.position = new Vector3(0f,0f,0f);
-		vuforiaCamera.transform.rotation = Quaternion.Euler (new Vector3(0f,0f,0f));
-		vuforiaCamera.transform.localScale = new Vector3 (1f,1f,1f);
+		//vuforiaCamera.transform.position = new Vector3(0f,0f,0f);
+		//vuforiaCamera.transform.rotation = Quaternion.Euler (new Vector3(0f,0f,0f));
+		//vuforiaCamera.transform.localScale = new Vector3 (1f,1f,1f);
+	}
+
+	private GameObject getTargetByName(string targetName){
+		foreach(GameObject target in allTargetsVuforia){
+			if (target.name == targetName)
+				return target;
+		}
+		return null;
 	}
 }

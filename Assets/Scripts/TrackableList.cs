@@ -39,4 +39,12 @@ public class TrackableList : MonoBehaviour {
 	public static IEnumerable<TrackableBehaviour> getActiveTrackables (){
 		return activeTrackables;
 	}
+
+	public static TrackableBehaviour getTrackerByName(string trackableName){
+		foreach (TrackableBehaviour tb in activeTrackables) {
+			if (trackableName.Equals (tb.TrackableName))
+				return tb;
+		}
+		return null;
+	}
 }
